@@ -49,7 +49,7 @@ export function buildApp(deps: AppDeps) {
   });
 
   // Public: health, auth (login/logout/me handle their own auth).
-  api.route('/health', healthRoutes(deps.db));
+  api.route('/health', healthRoutes(deps.db, deps.traccar));
   api.route('/auth', authRoutes(deps));
 
   // Everything below requires a session.

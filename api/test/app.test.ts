@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { buildApp } from '../src/app.js';
-import type { TraccarClient } from '../src/traccar/traccar.js';
+import { type TraccarClient, TraccarError } from '../src/traccar/traccar.js';
 import type { Db } from '../src/db/client.js';
 
 let app: ReturnType<typeof buildApp>;
@@ -27,6 +27,41 @@ describe('app routing', () => {
     const res = await app.request('/api/health');
     expect(res.status).toBe(200);
     expect(await res.json()).toMatchObject({ status: 'ok' });
+  });
+
+  it('checks Traccar in /api/health/traccar and caches the result', async () => {
+    let calls = 0;
+    let fail: TraccarError | null = null;
+    const traccar = {
+      ping: async () => {
+        calls++;
+        if (fail) throw fail;
+      },
+    } as unknown as TraccarClient;
+    const build = () =>
+      buildApp({
+        db: { execute: async () => ({ rows: [] }) } as unknown as Db,
+        traccar,
+        publicDir: '/nonexistent',
+        sessionSecret: 'x'.repeat(32),
+        secureCookies: false,
+      });
+
+    const ok = build();
+    expect(await (await ok.request('/api/health/traccar')).json()).toEqual({ status: 'ok' });
+    await ok.request('/api/health/traccar');
+    expect(calls).toBe(1);
+
+    fail = new TraccarError(400, '/devices', 'Traccar GET /devices returned 400');
+    const res = await build().request('/api/health/traccar');
+    expect(res.status).toBe(503);
+    expect(await res.json()).toEqual({ status: 'error', error: 'unauthorized' });
+
+    fail = new TraccarError(0, '/devices', 'fetch failed');
+    expect(await (await build().request('/api/health/traccar')).json()).toEqual({
+      status: 'error',
+      error: 'unreachable',
+    });
   });
 
   it('requires a session for other /api routes and never returns the SPA', async () => {

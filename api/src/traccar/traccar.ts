@@ -143,6 +143,14 @@ export class TraccarClient {
     return (await res.json()) as T;
   }
 
+  /**
+   * Cheap authenticated call that loads no data, to check reachability and the credentials.
+   * (`GET /session` only knows cookie sessions and answers 404 to a bearer token.)
+   */
+  async ping(): Promise<void> {
+    await this.request('GET', '/devices', { query: { id: 0 } });
+  }
+
   getDevices(): Promise<Device[]> {
     return this.request('GET', '/devices');
   }
