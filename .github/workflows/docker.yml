@@ -28,6 +28,13 @@ jobs:
       - name: Image name
         run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/trag" >> "$GITHUB_ENV"
 
+      # Production servers are arm64 (Hetzner CAX). For x86 servers too, list both platforms here,
+      # and raise min-versions-to-keep below: a multi-platform build stores 3 versions in GHCR.
+      - name: Target platforms
+        run: echo "PLATFORMS=linux/arm64" >> "$GITHUB_ENV"
+
+      - uses: docker/setup-qemu-action@v3
+
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
@@ -39,9 +46,22 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
+          platforms: ${{ env.PLATFORMS }}
           push: true
           tags: |
             ${{ env.IMAGE }}:latest
             ${{ env.IMAGE }}:sha-${{ github.sha }}
+          # One registry version per build. With provenance on, each build also pushes an untagged
+          # attestation manifest that the cleanup below could delete, breaking that tag's pulls.
+          provenance: false
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+      # Rollback targets: the last 10 sha-<commit> images. Needs the repo to have the Admin role
+      # in the package's "Manage Actions access" settings.
+      - name: Delete old images
+        uses: actions/delete-package-versions@v5
+        with:
+          package-name: trag
+          package-type: container
+          min-versions-to-keep: 10

@@ -119,16 +119,24 @@ needed, the workflow uses `GITHUB_TOKEN`.
    echo <token> | docker login ghcr.io -u <github-user> --password-stdin
    ```
 3. **Database:** create Trag's role and database in the existing Postgres (`traccar` is its
-   superuser). Trag creates its tables on first start.
+   superuser) with [`deploy/trag-db.sql`](deploy/trag-db.sql). It asks for the password
+   (`openssl rand -hex 24`) and is safe to re-run. Trag creates its tables on first start. From a
+   SQL client/IDE use [`deploy/trag-db.ide.sql`](deploy/trag-db.ide.sql) instead.
    ```sh
    cd /opt/traccar
-   docker compose exec db psql -U traccar -d traccar \
-     -c "CREATE ROLE trag LOGIN PASSWORD '<strong-password>'" \
-     -c "CREATE DATABASE trag OWNER trag"
+   docker compose cp trag-db.sql db:/tmp/trag-db.sql   # copied from deploy/ in this repo
+   docker compose exec db psql -U traccar -d traccar -f /tmp/trag-db.sql
    ```
-4. **Traccar service user:** in the Traccar UI as admin, create a user that is not an
-   administrator, with _Device readonly_ and _Limit commands_ on, and give it access to the
-   client's devices. Trag writes geofences, driver data stays in Trag.
+4. **Traccar service user:** in the Traccar UI as admin, create a user `trag` and give it access
+   to all of the client's devices:
+   - _Administrator_: **off**
+   - _Readonly_: **off**. Trag creates geofences for locations and links them to devices; a
+     readonly user gets 403 and no location can be saved.
+   - _Device readonly_: **on** (Trag never edits devices)
+   - _Limit commands_: **on** (Trag never sends commands)
+
+   Driver data stays in Trag.
+
 5. **Token:** log in to Traccar as that user, generate a token (Preferences, Token).
 6. **`/opt/traccar/trag.env`** from `.env.example`:
    ```sh
@@ -159,3 +167,37 @@ needed, the workflow uses `GITHUB_TOKEN`.
 Change the `trag` image tag in `compose.yml` to the new `sha-<commit>` and run
 `docker compose pull trag && docker compose up -d trag`. Migrations run on startup. To roll back,
 set the previous tag; note that a migration that already ran is not undone.
+
+### Checklist
+
+One-time, per GitHub repo:
+
+- [ ] GHCR package `trag`, Package settings, Manage Actions access: repo `trag` with the **Admin**
+      role (Write is enough to push, the old-image cleanup step needs Admin)
+- [ ] Last `Build and push image` run is green; note the `sha-<commit>` tag
+
+Per server (once):
+
+- [ ] `docker login ghcr.io` with a classic PAT that has only `read:packages`
+- [ ] Backups include `pg_dump trag`, not only `traccar` (users, drivers and locations live only
+      in Trag)
+- [ ] Weekly cleanup of unused images in root's crontab:
+      `0 4 * * 0 docker image prune -af --filter "until=168h" >/dev/null 2>&1`
+
+Per client:
+
+- [ ] DNS record for the subdomain points at the server
+- [ ] Postgres role and database `trag` created (`deploy/trag-db.sql`)
+- [ ] Traccar user `trag`: Administrator and Readonly **off**, Device readonly and Limit commands
+      **on**
+- [ ] That user is linked to **every** vehicle of the client (new vehicles too, until the
+      provisioning script exists)
+- [ ] Token generated while logged in as `trag`
+- [ ] `/opt/traccar/trag.env` filled in, `chmod 600`, `NODE_ENV=production`
+- [ ] `trag` service in `compose.yml` with a pinned `sha-<commit>` tag
+- [ ] `docker compose pull trag && docker compose up -d trag`; the log shows the migrations,
+      `Created owner` and `listening`
+- [ ] Caddy block added and reloaded; HTTPS works on the subdomain
+- [ ] Owner can log in, the map shows all vehicles, a test location appears as a geofence in Traccar
+      (delete it afterwards)
+- [ ] Not yet: Traccar event forwarding (step 10), until the webhook ships
