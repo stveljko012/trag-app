@@ -1,7 +1,11 @@
 # syntax=docker/dockerfile:1
 
+# The web and api builds are plain JS, so they run on the build machine's own platform (fast even
+# when the target is arm64 under emulation). Only the runtime dependencies, which include native
+# modules (@node-rs/argon2), are installed for the target platform.
+
 # ---- deps: full install for building ----
-FROM node:22-alpine AS deps
+FROM --platform=$BUILDPLATFORM node:22-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 COPY web/package.json web/
