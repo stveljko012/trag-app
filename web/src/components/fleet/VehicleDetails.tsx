@@ -9,7 +9,7 @@ import {
   WifiOff,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { type PointerEvent, useRef, useState } from 'react';
 import { useAssignDriver, useDrivers, useVehicleToday } from '../../api/queries';
 import { useMe } from '../../auth/useAuth';
 import type { RoutePoint, Vehicle } from '../../api/types';
@@ -67,30 +67,105 @@ export function VehicleDetails({
   const scrubbed = routeIndex !== null && routeIndex < last ? route[routeIndex] : undefined;
   const actionClass = 'h-11 w-full whitespace-normal';
 
-  return (
-    <aside
-      className={cn(
-        'flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_40px_rgb(15_23_42/0.18)]',
-        className,
-      )}
-    >
-      <button
-        type="button"
-        onClick={() => setCollapsed((c) => !c)}
-        aria-expanded={!collapsed}
-        className="flex w-full items-start justify-between gap-2 border-b border-border px-4 py-3.5 text-left"
-      >
-        <span>
-          <div className="font-bold">Detalji vozila</div>
-          <div className="text-[0.85rem] text-muted">
-            {vehicle.name} · {STATE_LABEL[state]} · {place}
-          </div>
-        </span>
-        {collapsed ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-      </button>
+  // Phones: drag the header down to collapse the sheet, or up to open it.
+  const [dragY, setDragY] = useState<number | null>(null);
+  const drag = useRef<{ y: number; t: number; moved: boolean } | null>(null);
+  // A drag ends with a click on the header; this keeps it from toggling again.
+  const suppressClick = useRef(false);
 
+  function onDragStart(e: PointerEvent<HTMLButtonElement>) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    drag.current = { y: e.clientY, t: performance.now(), moved: false };
+    suppressClick.current = false;
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+
+  function onDragMove(e: PointerEvent<HTMLButtonElement>) {
+    if (!drag.current) return;
+    const dy = e.clientY - drag.current.y;
+    if (Math.abs(dy) > 6) drag.current.moved = true;
+    if (collapsed) {
+      // Open as soon as the finger goes up, not on release: at the bottom edge of a phone the
+      // browser often takes over an upward swipe (toolbar, home bar) and cancels the pointer.
+      if (dy < -24) {
+        drag.current = null;
+        suppressClick.current = true;
+        setCollapsed(false);
+      }
+      return;
+    }
+    // The open sheet follows the finger down.
+    if (drag.current.moved) setDragY(Math.max(0, dy));
+  }
+
+  function onDragEnd(e: PointerEvent<HTMLButtonElement>) {
+    const start = drag.current;
+    drag.current = null;
+    setDragY(null);
+    if (!start?.moved) return;
+    suppressClick.current = true;
+    const dy = e.clientY - start.y;
+    const velocity = dy / Math.max(1, performance.now() - start.t); // px per ms
+    if (!collapsed && (dy > 80 || velocity > 0.5)) setCollapsed(true);
+  }
+
+  return (
+    <>
+      {/* Phones: the open card is a bottom sheet over a dimmed page; tapping outside collapses it. */}
       {!collapsed && (
-        <div className="flex min-h-0 flex-col gap-4 overflow-y-auto px-4 pt-[18px] pb-4">
+        <div
+          aria-hidden
+          className="fixed inset-0 animate-fade-in bg-slate-900/40 md:hidden"
+          style={dragY ? { opacity: Math.max(0, 1 - dragY / 400) } : undefined}
+          onClick={() => setCollapsed(true)}
+        />
+      )}
+      <aside
+        className={cn(
+          'relative flex min-h-0 flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-[0_12px_40px_rgb(15_23_42/0.18)]',
+          className,
+        )}
+        style={{
+          transform: dragY ? `translateY(${dragY}px)` : undefined,
+          transition: dragY === null ? 'transform 200ms ease-out' : 'none',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            if (suppressClick.current) suppressClick.current = false;
+            else setCollapsed((c) => !c);
+          }}
+          onPointerDown={onDragStart}
+          onPointerMove={onDragMove}
+          onPointerUp={onDragEnd}
+          onPointerCancel={() => {
+            drag.current = null;
+            setDragY(null);
+          }}
+          aria-expanded={!collapsed}
+          className="relative flex w-full touch-none items-start justify-between gap-2 border-b border-border px-4 py-3.5 text-left select-none md:pointer-events-none"
+        >
+          {/* Grab handle, a hint that the sheet can be dragged. */}
+          <span className="absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full bg-slate-300 md:hidden" />
+          <span>
+            <div className="font-bold">Detalji vozila</div>
+            <div className="text-[0.85rem] text-muted">
+              {vehicle.name} · {STATE_LABEL[state]} · {place}
+            </div>
+          </span>
+          <span className="md:hidden">
+            {collapsed ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+          </span>
+        </button>
+
+        {/* Collapsing is for phones, where the card covers the map; desktop has room for it. */}
+        <div
+          className={cn(
+            'flex min-h-0 flex-col gap-4 overflow-y-auto px-4 pt-[18px] pb-4',
+            collapsed && 'max-md:hidden',
+          )}
+        >
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
               <div className={cn(plateClass, 'text-2xl leading-tight')}>{vehicle.name}</div>
@@ -273,7 +348,7 @@ export function VehicleDetails({
             )}
           </div>
         </div>
-      )}
-    </aside>
+      </aside>
+    </>
   );
 }

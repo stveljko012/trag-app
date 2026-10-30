@@ -79,7 +79,11 @@ export function VehicleList({
               <li key={v.id}>
                 <button
                   type="button"
-                  onClick={() => onSelect(v.id)}
+                  onClick={() => {
+                    onSelect(v.id);
+                    // Phones: fold the list so the map and the details sheet are in view.
+                    setExpanded(false);
+                  }}
                   className={cn(
                     'grid w-full grid-cols-[10px_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-0.5 border-b border-l-3 border-b-border border-l-transparent px-4 py-3.5 text-left hover:bg-surface-muted',
                     v.id === selectedId && 'border-l-primary bg-primary-soft hover:bg-primary-soft',

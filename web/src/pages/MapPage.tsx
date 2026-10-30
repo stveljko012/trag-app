@@ -335,7 +335,13 @@ export function MapPage() {
         )}
 
         {selected && (
-          <div className="pointer-events-none absolute top-[132px] bottom-4 left-4 z-900 flex w-[380px] flex-col max-md:fixed max-md:top-auto max-md:right-0 max-md:bottom-0 max-md:left-0 max-md:z-1200 max-md:max-h-[78dvh] max-md:w-auto [&>*]:pointer-events-auto [&>*]:max-h-full">
+          <div
+            className={cn(
+              'pointer-events-none absolute bottom-4 left-4 z-900 flex w-[380px] flex-col max-md:fixed max-md:top-auto max-md:right-0 max-md:bottom-0 max-md:left-0 max-md:z-1200 max-md:max-h-[78dvh] max-md:w-auto [&>*]:pointer-events-auto [&>*]:max-h-full',
+              // Below the ask bar when it is shown, otherwise at the top like the map controls.
+              SHOW_ASK ? 'top-[132px]' : 'top-4',
+            )}
+          >
             <VehicleDetails
               key={selected.id}
               vehicle={selected}
