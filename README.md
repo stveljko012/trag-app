@@ -134,6 +134,7 @@ needed, the workflow uses `GITHUB_TOKEN`.
      readonly user gets 403 and no location can be saved.
    - _Device readonly_: **on** (Trag never edits devices)
    - _Limit commands_: **on** (Trag never sends commands)
+   - Link it to all existing geofences too, or they will not show up as locations.
 
    Driver data stays in Trag.
 
@@ -190,6 +191,8 @@ Per client:
 - [ ] Postgres role and database `trag` created (`deploy/trag-db.sql`)
 - [ ] Traccar user `trag`: Administrator and Readonly **off**, Device readonly and Limit commands
       **on**
+- [ ] That user is linked to every existing **geofence** (admin-made ones are invisible to it
+      otherwise, so they would not show up as locations)
 - [ ] That user is linked to **every** vehicle of the client (new vehicles too, until the
       provisioning script exists)
 - [ ] Token generated while logged in as `trag`

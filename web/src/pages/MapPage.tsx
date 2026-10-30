@@ -49,7 +49,6 @@ export function MapPage() {
   const all = useMemo(() => vehicles.data ?? [], [vehicles.data]);
   const visible = useMemo(() => filterVehicles(all, filter, query), [all, filter, query]);
   const selected = all.find((v) => v.id === selectedId) ?? null;
-  const online = all.filter((v) => v.state !== 'offline').length;
 
   const route = useRoute(layers.route ? (selectedId ?? undefined) : undefined, belgradeDay(), {
     refetchInterval: 30_000,
@@ -143,11 +142,6 @@ export function MapPage() {
     else void wrapRef.current?.requestFullscreen();
   }
 
-  const refreshedS = vehicles.dataUpdatedAt
-    ? Math.max(0, Math.round((now - vehicles.dataUpdatedAt) / 1000))
-    : null;
-  const stale = vehicles.isError || refreshedS === null || refreshedS > 60;
-
   const floatPanel = 'bg-surface shadow-float';
   const controlButton =
     'grid size-11 place-items-center text-text hover:bg-surface-muted [&+&]:border-t [&+&]:border-border';
@@ -158,21 +152,7 @@ export function MapPage() {
         <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em] max-md:text-[1.2rem]">
           Mapa uživo
         </h1>
-        <span
-          className={cn(
-            'inline-flex items-center gap-2 rounded-full border px-3 py-[5px] text-sm font-semibold',
-            stale
-              ? 'border-border bg-surface-muted text-muted'
-              : 'border-green-200 bg-green-50 text-green-800',
-          )}
-        >
-          <Dot state={stale ? 'offline' : 'moving'} />
-          {stale ? 'Nema veze' : `Uživo · ${online} od ${all.length} vozila šalje signal`}
-        </span>
         <div className="ml-auto flex flex-wrap items-center gap-2.5 max-md:gap-2">
-          <span className="text-sm text-muted max-md:text-[0.8rem]">
-            {refreshedS === null ? 'Učitavanje…' : `Osveženo pre ${refreshedS} s`}
-          </span>
           {me?.role === 'owner' && (
             <Link
               className={buttonClass()}
