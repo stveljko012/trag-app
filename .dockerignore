@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+api/public
+.git
+.github
+.idea
+.vscode
+.env
+.env.*
+!.env.example
+*.log
+coverage
+deploy
+README.md

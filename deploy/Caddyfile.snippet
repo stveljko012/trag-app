@@ -1,0 +1,18 @@
+# One block per client subdomain, in /opt/traccar/Caddyfile.
+uniquegarden.prosparrow.io {
+	encode zstd gzip
+
+	# The webhook is only for Traccar on the internal gps network.
+	respond /api/webhooks/* 404
+
+	reverse_proxy trag:3000
+}
+
+# Traccar's own UI stays reachable for you only, e.g. on an admin subdomain with basic auth:
+#
+# traccar-uniquegarden.prosparrow.io {
+# 	basic_auth {
+# 		admin <hash from: docker compose exec caddy caddy hash-password>
+# 	}
+# 	reverse_proxy traccar:8082
+# }

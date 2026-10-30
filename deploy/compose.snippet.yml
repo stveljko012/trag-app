@@ -1,0 +1,33 @@
+# Trag in the existing /opt/traccar stack. Copy the `trag:` block under `services:` in
+# /opt/traccar/compose.yml (same file, so the *default-logging anchor resolves). The x-logging
+# anchor below only mirrors the production file so this snippet is valid YAML on its own.
+#
+# Trag joins the `gps` network and has no published ports; Caddy proxies to trag:3000.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: '10m'
+    max-file: '3'
+
+services:
+  trag:
+    # Pin the version you deploy (tags: sha-<commit> and latest, built by GitHub Actions).
+    image: ghcr.io/<owner>/trag:sha-<commit>
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      traccar:
+        condition: service_started
+    env_file: ./trag.env
+    networks:
+      - gps
+    logging: *default-logging
+
+  # Add to the existing `traccar:` service's `environment:` once Trag's webhook is deployed.
+  # Verify the header key against your Traccar version (event.forward.header vs .headers).
+  # TRAG_WEBHOOK_SECRET goes in /opt/traccar/.env and must equal WEBHOOK_SECRET in trag.env.
+  #
+  #   EVENT_FORWARD_ENABLE: "true"
+  #   EVENT_FORWARD_URL: http://trag:3000/api/webhooks/traccar/event
+  #   EVENT_FORWARD_HEADER: "X-Webhook-Secret: ${TRAG_WEBHOOK_SECRET:?must be set}"

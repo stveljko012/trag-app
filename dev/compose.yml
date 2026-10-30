@@ -1,0 +1,38 @@
+# Local development stack: Postgres 17 + Traccar, mirroring production.
+#   docker compose -f dev/compose.yml up -d
+# Traccar UI (admin only, for creating the service user/token): http://localhost:8082
+name: trag-dev
+
+services:
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - '127.0.0.1:5432:5432'
+    volumes:
+      - db:/var/lib/postgresql/data
+      - ./initdb:/docker-entrypoint-initdb.d:ro
+      - ../api/drizzle:/migrations:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      retries: 10
+
+  traccar:
+    image: traccar/traccar:latest
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      CONFIG_USE_ENVIRONMENT_VARIABLES: 'true'
+      DATABASE_DRIVER: org.postgresql.Driver
+      DATABASE_URL: jdbc:postgresql://db:5432/traccar
+      DATABASE_USER: traccar
+      DATABASE_PASSWORD: traccar
+    ports:
+      - '127.0.0.1:8082:8082'
+      - '5027:5027'
+
+volumes:
+  db:

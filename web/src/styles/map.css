@@ -1,0 +1,191 @@
+/* Leaflet divIcon markup is plain HTML, so its styles must be global. */
+
+.trag-vehicle-marker {
+  background: none;
+  border: 0;
+}
+
+.trag-vehicle-pill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  /* Sits above the position; the tip below (::after) touches it. */
+  transform: translate(-50%, calc(-100% - 7px));
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 6px rgb(15 23 42 / 0.18);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--color-text);
+}
+
+/* Downward tip: a rotated square sharing the pill's background and border. */
+.trag-vehicle-pill::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 9px;
+  height: 9px;
+  background: inherit;
+  border: solid var(--trag-pill-border, var(--color-border));
+  border-width: 0 1px 1px 0;
+  border-bottom-right-radius: 2px;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.trag-vehicle-pill.state-alarm {
+  --trag-pill-border: #fecaca;
+  background: #fff5f5;
+  border-color: #fecaca;
+}
+
+.trag-vehicle-pill.state-stopped {
+  --trag-pill-border: #fde3b5;
+  border-color: #fde3b5;
+}
+
+.trag-vehicle-speed {
+  font-family: Inter, system-ui, sans-serif;
+  font-weight: 500;
+  color: var(--color-muted);
+}
+
+.trag-vehicle-pill.selected {
+  --trag-pill-border: var(--color-dark);
+  background: var(--color-dark);
+  border-color: var(--color-dark);
+  color: #fff;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 35%, transparent);
+}
+
+.trag-vehicle-pill.selected .trag-vehicle-speed {
+  color: #cbd5e1;
+}
+
+.trag-location-label {
+  padding: 2px 8px;
+  border: 1px solid #d1e7d8;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: none;
+  color: #15803d;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.trag-location-label::before {
+  display: none;
+}
+
+.trag-stop-marker {
+  background: none;
+  border: 0;
+}
+
+.trag-stop-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border: 2px solid #fff;
+  border-radius: 50%;
+  background: var(--color-warning);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  box-shadow: 0 1px 4px rgb(15 23 42 / 0.3);
+}
+
+.trag-stop-pin.selected {
+  background: var(--color-dark);
+}
+
+.trag-edit-handle {
+  background: none;
+  border: 0;
+}
+
+.trag-edit-handle-dot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  background: var(--color-primary);
+  box-shadow: 0 1px 6px rgb(15 23 42 / 0.4);
+  cursor: grab;
+}
+
+/* State dots inside marker HTML (see components/map/icons.ts). */
+.trag-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.trag-dot-moving {
+  background: var(--color-success);
+}
+
+.trag-dot-stopped {
+  background: var(--color-warning);
+}
+
+.trag-dot-offline {
+  background: #94a3b8;
+}
+
+.trag-dot-alarm {
+  background: var(--color-danger);
+  box-shadow: 0 0 0 3px rgb(220 38 38 / 0.2);
+}
+
+.leaflet-popup-content {
+  margin: 12px 14px;
+  font-size: 0.875rem;
+  line-height: 1.4;
+}
+
+/* Ignition state next to the plate. */
+.trag-engine {
+  display: inline-flex;
+}
+
+.trag-engine svg {
+  width: 14px;
+  height: 14px;
+}
+
+.trag-engine-on {
+  color: var(--color-success);
+}
+
+.trag-engine-off {
+  color: #94a3b8;
+}
+
+.trag-vehicle-pill.selected .trag-engine-on {
+  color: #4ade80;
+}
+
+.trag-vehicle-pill.selected .trag-engine-off {
+  color: #64748b;
+}
+
+/* Slightly darker, calmer base map so markers and routes stand out. Tiles only, not overlays. */
+.leaflet-tile-pane {
+  filter: brightness(0.64) saturate(0.6);
+}
