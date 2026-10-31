@@ -13,7 +13,6 @@ import {
   STATE_LABEL,
   statusText,
 } from '../../lib/vehicleState';
-import { Missing } from '../Missing';
 import { Select } from '../Select';
 import { ErrorMessage, Stat } from '../ui';
 
@@ -312,13 +311,6 @@ export function VehicleDetails({
                 <Phone size={16} /> Pozovi vozača
               </button>
             )}
-            {['Poruka na Telegram', 'Podeli lokaciju'].map((label) => (
-              <Missing key={label}>
-                <button type="button" className={cn(buttonClass(), actionClass)}>
-                  {label}
-                </button>
-              </Missing>
-            ))}
           </div>
 
           <div>

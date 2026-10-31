@@ -33,6 +33,8 @@ services:
     ports:
       - '127.0.0.1:8082:8082'
       - '5027:5027'
+      # OsmAnd over HTTP, for the demo seed (npm run seed:demo -w @trag/api).
+      - '127.0.0.1:5055:5055'
 
 volumes:
   db:
