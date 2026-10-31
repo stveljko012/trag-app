@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useEvents, useVehicles } from '../api/queries';
+import { useEvents, useVehicleOptions } from '../api/queries';
 import type { FleetEvent } from '../api/types';
 import { Select } from '../components/Select';
 import { alarmLabel, EVENT_FILTER_TYPES, eventLabel } from '../lib/events';
@@ -18,7 +18,7 @@ export function EventsPage() {
   const [type, setType] = useState('');
   const [vehicle, setVehicle] = useState<number | undefined>();
 
-  const vehicles = useVehicles();
+  const vehicles = useVehicleOptions();
   const validRange = from <= to;
   const events = useEvents({ from, to: validRange ? to : from, type: type || undefined, vehicle });
 

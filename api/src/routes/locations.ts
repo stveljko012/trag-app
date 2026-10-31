@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { requireOwner } from '../auth/middleware.js';
 import type { Db } from '../db/client.js';
+import type { MapContext } from '../fleet/mapContext.js';
 import {
   createLocation,
   deleteLocation,
@@ -69,40 +70,47 @@ function toCreateInput(body: CreateBody) {
   };
 }
 
-export function locationsRoutes(db: Db, traccar: TraccarClient) {
-  return new Hono<AppEnv>()
-    .get('/', async (c) => c.json({ locations: await listLocations(db, traccar) }))
-    .post('/', requireOwner, zValidator('json', createSchema), async (c) => {
-      const location = await createLocation(db, traccar, toCreateInput(c.req.valid('json')));
-      return c.json({ location }, 201);
-    })
-    .post('/from-stop', requireOwner, zValidator('json', fromStopSchema), async (c) => {
-      const location = await createLocation(db, traccar, toCreateInput(c.req.valid('json')));
-      return c.json({ location }, 201);
-    })
-    .put(
-      '/:id',
-      requireOwner,
-      zValidator('param', idParamSchema),
-      zValidator('json', updateSchema),
-      async (c) => {
-        const { id } = c.req.valid('param');
-        const body = c.req.valid('json');
-        const location = await updateLocation(db, traccar, id, {
-          name: body.name,
-          circle:
-            body.lat !== undefined && body.lng !== undefined && body.radius_m !== undefined
-              ? { lat: body.lat, lng: body.lng, radiusM: body.radius_m }
-              : undefined,
-          address: body.address,
-          notes: body.notes,
-          hourlyRate: body.hourly_rate,
-        });
-        return c.json({ location });
-      },
-    )
-    .delete('/:id', requireOwner, zValidator('param', idParamSchema), async (c) => {
-      await deleteLocation(db, traccar, c.req.valid('param').id);
-      return c.body(null, 204);
-    });
+export function locationsRoutes(db: Db, traccar: TraccarClient, mapContext: MapContext) {
+  return (
+    new Hono<AppEnv>()
+      // Every change reaches the map's location names right away, not after the cache expires.
+      .use('*', async (c, next) => {
+        await next();
+        if (c.req.method !== 'GET' && c.res.ok) mapContext.invalidateGeofences();
+      })
+      .get('/', async (c) => c.json({ locations: await listLocations(db, traccar) }))
+      .post('/', requireOwner, zValidator('json', createSchema), async (c) => {
+        const location = await createLocation(db, traccar, toCreateInput(c.req.valid('json')));
+        return c.json({ location }, 201);
+      })
+      .post('/from-stop', requireOwner, zValidator('json', fromStopSchema), async (c) => {
+        const location = await createLocation(db, traccar, toCreateInput(c.req.valid('json')));
+        return c.json({ location }, 201);
+      })
+      .put(
+        '/:id',
+        requireOwner,
+        zValidator('param', idParamSchema),
+        zValidator('json', updateSchema),
+        async (c) => {
+          const { id } = c.req.valid('param');
+          const body = c.req.valid('json');
+          const location = await updateLocation(db, traccar, id, {
+            name: body.name,
+            circle:
+              body.lat !== undefined && body.lng !== undefined && body.radius_m !== undefined
+                ? { lat: body.lat, lng: body.lng, radiusM: body.radius_m }
+                : undefined,
+            address: body.address,
+            notes: body.notes,
+            hourlyRate: body.hourly_rate,
+          });
+          return c.json({ location });
+        },
+      )
+      .delete('/:id', requireOwner, zValidator('param', idParamSchema), async (c) => {
+        await deleteLocation(db, traccar, c.req.valid('param').id);
+        return c.body(null, 204);
+      })
+  );
 }

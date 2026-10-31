@@ -22,6 +22,8 @@ const envSchema = z.object({
   TRACCAR_TOKEN: optional,
   TRACCAR_USER: optional,
   TRACCAR_PASS: optional,
+  // Shared with Traccar's position forwarding (X-Webhook-Secret); unset turns the webhook off.
+  WEBHOOK_SECRET: optional,
 });
 
 export type Config = z.infer<typeof envSchema>;

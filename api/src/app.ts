@@ -12,7 +12,10 @@ import {
 import { authRoutes } from './routes/auth.js';
 import { driversRoutes } from './routes/drivers.js';
 import { eventsRoutes } from './routes/events.js';
+import { LiveHub } from './fleet/liveHub.js';
+import { MapContext } from './fleet/mapContext.js';
 import { healthRoutes } from './routes/health.js';
+import { liveRoutes, webhookRoutes } from './routes/live.js';
 import { locationsRoutes } from './routes/locations.js';
 import { vehiclesRoutes } from './routes/vehicles.js';
 import { TraccarError } from './traccar/traccar.js';
@@ -22,6 +25,8 @@ import { LocationNotFoundError, ShapeNotEditableError } from './locations/locati
 export function buildApp(deps: AppDeps) {
   const root = resolve(deps.publicDir);
   const app = new Hono();
+  const mapContext = new MapContext(deps.traccar, deps.db);
+  const liveHub = deps.liveHub ?? new LiveHub();
 
   // 1. API routes.
   const api = new Hono<AppEnv>();
@@ -52,14 +57,17 @@ export function buildApp(deps: AppDeps) {
   api.route('/health', healthRoutes(deps.db, deps.traccar));
   api.get('/config', (c) => c.json({ clientName: deps.clientName ?? null }));
   api.route('/auth', authRoutes(deps));
+  // Traccar's position forwarding; checks its own shared secret.
+  api.route('/webhooks', webhookRoutes(deps.webhookSecret, liveHub, mapContext));
 
   // Everything below requires a session.
   const secured = new Hono<AppEnv>();
   secured.use('*', requireAuth(deps));
-  secured.route('/vehicles', vehiclesRoutes(deps.traccar, deps.db));
-  secured.route('/drivers', driversRoutes(deps.db));
+  secured.route('/vehicles', vehiclesRoutes(deps.traccar, deps.db, mapContext));
+  secured.route('/live', liveRoutes(liveHub));
+  secured.route('/drivers', driversRoutes(deps.db, mapContext));
   secured.route('/events', eventsRoutes(deps.traccar));
-  secured.route('/locations', locationsRoutes(deps.db, deps.traccar));
+  secured.route('/locations', locationsRoutes(deps.db, deps.traccar, mapContext));
   api.route('/', secured);
 
   app.route('/api', api);

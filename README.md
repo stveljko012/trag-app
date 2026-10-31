@@ -33,6 +33,15 @@ empty, creates the owner from `ADMIN_EMAIL` / `ADMIN_PASSWORD`. To create it exp
 `docker compose -f dev/compose.yml up -d` also starts a local Traccar on http://localhost:8082
 (device port 5027) for testing the integration.
 
+### Live map
+
+In production Traccar forwards every position to `POST /api/webhooks/traccar/position` and Trag
+pushes it to open maps over `GET /api/live` (server-sent events); the map then polls only every
+60 s. Locally nothing forwards, so the stream stays quiet and the map polls every 10 s. To try the
+live path, set `WEBHOOK_SECRET` in `.env` and run `npm run fake:position -w @trag/api -- [deviceId]`:
+it drives that device in a straight line and posts each step the way Traccar does. The next poll
+moves the marker back to the real position.
+
 ### Traccar
 
 Trag talks to Traccar only through its REST API (`api/src/traccar/traccar.ts`), as a dedicated
@@ -127,14 +136,11 @@ needed, the workflow uses `GITHUB_TOKEN`.
    docker compose cp trag-db.sql db:/tmp/trag-db.sql   # copied from deploy/ in this repo
    docker compose exec db psql -U traccar -d traccar -f /tmp/trag-db.sql
    ```
-4. **Traccar service user:** in the Traccar UI as admin, create a user `trag` and give it access
-   to all of the client's devices:
-   - _Administrator_: **off**
-   - _Readonly_: **off**. Trag creates geofences for locations and links them to devices; a
-     readonly user gets 403 and no location can be saved.
-   - _Device readonly_: **on** (Trag never edits devices)
-   - _Limit commands_: **on** (Trag never sends commands)
-   - Link it to all existing geofences too, or they will not show up as locations.
+4. **Traccar service user:** in the Traccar UI as admin, create a user `trag` with
+   _Administrator_ **on** and _Readonly_ **off**. Trag lists devices and geofences with
+   `all=true`, so it sees every vehicle and location without linking them one by one, and it
+   creates geofences for locations. The token is then full Traccar admin access: keep it only in
+   `trag.env`.
 
    Driver data stays in Trag.
 
@@ -160,10 +166,12 @@ needed, the workflow uses `GITHUB_TOKEN`.
    `docker compose exec caddy caddy reload --config /etc/caddy/Caddyfile`.
 9. **Start:** `docker compose pull trag && docker compose up -d trag`, then check
    `docker compose logs -f trag` for `Applied`/`Created owner`/`listening` and open the subdomain.
-10. **Traccar event forwarding** (once the webhook ships): add the `EVENT_FORWARD_*` variables from
-    the snippet to the `traccar` service, put `TRAG_WEBHOOK_SECRET` (same as `WEBHOOK_SECRET`) in
-    `/opt/traccar/.env`, and `docker compose up -d traccar`. Teltonika devices resend buffered
-    records, so the short restart loses no positions.
+10. **Live map:** add the `FORWARD_*` variables from the snippet to the `traccar` service, put
+    `TRAG_WEBHOOK_SECRET` (same as `WEBHOOK_SECRET`) in `/opt/traccar/.env`, and
+    `docker compose up -d traccar`. Teltonika devices resend buffered records, so the short
+    restart loses no positions. Traccar then posts every position to Trag, which pushes it to
+    open maps over `GET /api/live` (server-sent events). Without it the map still works, polling
+    every 10 s.
 
 ### Updating and rolling back
 
@@ -191,12 +199,7 @@ Per client:
 
 - [ ] DNS record for the subdomain points at the server
 - [ ] Postgres role and database `trag` created (`deploy/trag-db.sql`)
-- [ ] Traccar user `trag`: Administrator and Readonly **off**, Device readonly and Limit commands
-      **on**
-- [ ] That user is linked to every existing **geofence** (admin-made ones are invisible to it
-      otherwise, so they would not show up as locations)
-- [ ] That user is linked to **every** vehicle of the client (new vehicles too, until the
-      provisioning script exists)
+- [ ] Traccar user `trag`: Administrator **on**, Readonly **off**
 - [ ] Token generated while logged in as `trag`
 - [ ] `/opt/traccar/trag.env` filled in, `chmod 600`, `NODE_ENV=production`
 - [ ] `trag` service in `compose.yml` with a pinned `sha-<commit>` tag
@@ -205,4 +208,5 @@ Per client:
 - [ ] Caddy block added and reloaded; HTTPS works on the subdomain
 - [ ] Owner can log in, the map shows all vehicles, a test location appears as a geofence in Traccar
       (delete it afterwards)
-- [ ] Not yet: Traccar event forwarding (step 10), until the webhook ships
+- [ ] Live map (step 10): `FORWARD_*` on `traccar`, `TRAG_WEBHOOK_SECRET` equal to
+      `WEBHOOK_SECRET`; with the map open, a moving vehicle updates within a second or two

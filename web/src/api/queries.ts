@@ -9,6 +9,7 @@ import type {
   Stop,
   Trip,
   Vehicle,
+  VehicleOption,
   VehicleToday,
 } from './types';
 
@@ -26,6 +27,15 @@ export function useVehicles({ refetchInterval }: { refetchInterval?: number } = 
     queryKey: ['vehicles'],
     queryFn: async () => (await apiFetch<{ vehicles: Vehicle[] }>('/vehicles')).vehicles,
     refetchInterval,
+  });
+}
+
+/** For selects on history, events and drivers: fetched fresh, never from the map's cache. */
+export function useVehicleOptions() {
+  return useQuery({
+    queryKey: ['vehicles', 'options'],
+    queryFn: async () =>
+      (await apiFetch<{ vehicles: VehicleOption[] }>('/vehicles/options')).vehicles,
   });
 }
 

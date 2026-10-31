@@ -5,7 +5,7 @@ import {
   useDeleteDriver,
   useDrivers,
   useSaveDriver,
-  useVehicles,
+  useVehicleOptions,
 } from '../api/queries';
 import { ApiError } from '../api/client';
 import type { Driver } from '../api/types';
@@ -43,7 +43,7 @@ export function DriversPage() {
   const { data: me } = useMe();
   const canEdit = me?.role === 'owner';
   const drivers = useDrivers();
-  const vehicles = useVehicles();
+  const vehicles = useVehicleOptions();
   const save = useSaveDriver();
   const assign = useAssignDriver();
   const remove = useDeleteDriver();

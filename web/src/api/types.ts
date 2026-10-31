@@ -16,6 +16,13 @@ export interface Driver extends DriverRef {
   since: string | null;
 }
 
+/** A vehicle for selects: name and current driver, without position or state. */
+export interface VehicleOption {
+  id: number;
+  name: string;
+  driver: DriverRef | null;
+}
+
 export interface Vehicle {
   id: number;
   name: string;

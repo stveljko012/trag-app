@@ -24,10 +24,13 @@ services:
       - gps
     logging: *default-logging
 
-  # Add to the existing `traccar:` service's `environment:` once Trag's webhook is deployed.
-  # Verify the header key against your Traccar version (event.forward.header vs .headers).
+  # Live map: add to the existing `traccar:` service's `environment:`, then
+  # `docker compose up -d traccar`. Traccar posts every position to Trag on the gps network.
   # TRAG_WEBHOOK_SECRET goes in /opt/traccar/.env and must equal WEBHOOK_SECRET in trag.env.
+  # Environment variables override the same keys in traccar.xml.
   #
-  #   EVENT_FORWARD_ENABLE: "true"
-  #   EVENT_FORWARD_URL: http://trag:3000/api/webhooks/traccar/event
-  #   EVENT_FORWARD_HEADER: "X-Webhook-Secret: ${TRAG_WEBHOOK_SECRET:?must be set}"
+  #   CONFIG_USE_ENVIRONMENT_VARIABLES: "true"
+  #   FORWARD_TYPE: json
+  #   FORWARD_URL: http://trag:3000/api/webhooks/traccar/position
+  #   FORWARD_HEADER: "X-Webhook-Secret: ${TRAG_WEBHOOK_SECRET:?must be set}"
+  #   FORWARD_RETRY_ENABLE: "true"

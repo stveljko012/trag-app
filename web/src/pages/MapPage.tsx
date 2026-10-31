@@ -13,6 +13,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CircleMarker, Polyline } from 'react-leaflet';
 import { Link } from 'react-router';
+import { useLiveVehicles } from '../api/live';
 import { useLocations, useRoute, useVehicles } from '../api/queries';
 import { useMe } from '../auth/useAuth';
 import { VehicleDetails } from '../components/fleet/VehicleDetails';
@@ -31,6 +32,8 @@ import { displayState, STATE_LABEL } from '../lib/vehicleState';
 import { PageTitle } from '../components/PageTitle';
 
 const REFRESH_MS = 10_000;
+// With live positions arriving, polling only catches what they cannot bring, such as going offline.
+const LIVE_REFRESH_MS = 60_000;
 // The viewer's last base map choice; only a convenience, so storage errors are ignored.
 const BASEMAP_KEY = 'trag.map.basemap';
 
@@ -51,7 +54,8 @@ const ASK_EXAMPLES = [
 
 export function MapPage() {
   const { data: me } = useMe();
-  const vehicles = useVehicles({ refetchInterval: REFRESH_MS });
+  const live = useLiveVehicles();
+  const vehicles = useVehicles({ refetchInterval: live ? LIVE_REFRESH_MS : REFRESH_MS });
   const locations = useLocations();
   const now = useNow(1000);
   const primary = themeColor('--color-primary');

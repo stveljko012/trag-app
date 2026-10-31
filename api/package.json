@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "seed": "tsx --env-file-if-exists=../.env src/scripts/seed.ts",
+    "fake:position": "tsx --env-file-if-exists=../.env src/scripts/fake-position.ts",
     "gen:traccar": "npx -y openapi-typescript@7 https://raw.githubusercontent.com/traccar/traccar/master/openapi.yaml -o src/traccar/schema.d.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx --env-file-if-exists=../.env src/scripts/migrate.ts",

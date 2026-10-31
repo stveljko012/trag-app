@@ -2,7 +2,7 @@ import { ChevronLeft, ChevronRight, Loader2, MapPinPlus, RotateCw } from 'lucide
 import { useMemo, useState } from 'react';
 import { Marker, Polyline, Popup } from 'react-leaflet';
 import { Link, useSearchParams } from 'react-router';
-import { useRoute, useStops, useTrips, useVehicles } from '../api/queries';
+import { useRoute, useStops, useTrips, useVehicleOptions } from '../api/queries';
 import { useMe } from '../auth/useAuth';
 import type { Stop, Trip } from '../api/types';
 import { BaseMap, FitBounds, PanTo } from '../components/map/BaseMap';
@@ -29,7 +29,7 @@ const DAY_RE = /^\d{4}-\d{2}-\d{2}$/;
 export function HistoryPage() {
   const [params, setParams] = useSearchParams();
   const { data: me } = useMe();
-  const vehicles = useVehicles();
+  const vehicles = useVehicleOptions();
   const today = belgradeDay();
 
   const dayParam = params.get('day');
