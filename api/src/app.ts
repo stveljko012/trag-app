@@ -64,7 +64,7 @@ export function buildApp(deps: AppDeps) {
   const secured = new Hono<AppEnv>();
   secured.use('*', requireAuth(deps));
   secured.route('/vehicles', vehiclesRoutes(deps.traccar, deps.db, mapContext));
-  secured.route('/live', liveRoutes(liveHub));
+  secured.route('/live', liveRoutes(liveHub, !!deps.webhookSecret));
   secured.route('/drivers', driversRoutes(deps.db, mapContext));
   secured.route('/events', eventsRoutes(deps.traccar));
   secured.route('/locations', locationsRoutes(deps.db, deps.traccar, mapContext));

@@ -36,9 +36,9 @@ empty, creates the owner from `ADMIN_EMAIL` / `ADMIN_PASSWORD`. To create it exp
 ### Live map
 
 In production Traccar forwards every position to `POST /api/webhooks/traccar/position` and Trag
-pushes it to open maps over `GET /api/live` (server-sent events); the map then polls only every
-60 s. Locally nothing forwards, so the stream stays quiet and the map polls every 10 s. To try the
-live path, set `WEBHOOK_SECRET` in `.env` and run `npm run fake:position -w @trag/api -- [deviceId]`:
+pushes it to open maps over `GET /api/live` (server-sent events). While the stream is connected
+and `WEBHOOK_SECRET` is set, the map polls only every 60 s (for offline status and new vehicles);
+otherwise every 10 s, as without live positions. To try the live path locally, set `WEBHOOK_SECRET` in `.env` and run `npm run fake:position -w @trag/api -- [deviceId]`:
 it drives that device in a straight line and posts each step the way Traccar does. The next poll
 moves the marker back to the real position.
 

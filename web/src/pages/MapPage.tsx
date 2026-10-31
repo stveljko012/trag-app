@@ -32,7 +32,7 @@ import { displayState, STATE_LABEL } from '../lib/vehicleState';
 import { PageTitle } from '../components/PageTitle';
 
 const REFRESH_MS = 10_000;
-// With live positions arriving, polling only catches what they cannot bring, such as going offline.
+// With the live stream up, polling only catches what positions cannot bring, such as going offline.
 const LIVE_REFRESH_MS = 60_000;
 // The viewer's last base map choice; only a convenience, so storage errors are ignored.
 const BASEMAP_KEY = 'trag.map.basemap';

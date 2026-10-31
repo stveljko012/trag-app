@@ -65,8 +65,11 @@ export function webhookRoutes(secret: string | undefined, hub: LiveHub, mapConte
   });
 }
 
-/** GET /live: forwarded positions as server-sent `vehicle` events, for signed-in users. */
-export function liveRoutes(hub: LiveHub) {
+/**
+ * GET /live: forwarded positions as server-sent `vehicle` events, for signed-in users. The first
+ * event, `ready`, says whether the webhook is configured, so the map knows it can poll less.
+ */
+export function liveRoutes(hub: LiveHub, webhook: boolean) {
   return new Hono<AppEnv>().get('/', (c) => {
     // Caddy's `encode` must not compress the stream, or it buffers events.
     c.header('Content-Encoding', 'identity');
@@ -83,7 +86,7 @@ export function liveRoutes(hub: LiveHub) {
         HEARTBEAT_MS,
       );
       try {
-        await stream.writeSSE({ event: 'ready', data: '' });
+        await stream.writeSSE({ event: 'ready', data: JSON.stringify({ webhook }) });
         await closed;
       } finally {
         clearInterval(heartbeat);

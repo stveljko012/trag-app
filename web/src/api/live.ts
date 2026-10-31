@@ -2,29 +2,22 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import type { Vehicle } from './types';
 
-/** Without a live position for this long, the map falls back to fast polling. */
-const FRESH_MS = 60_000;
-
 /**
  * Forwarded positions from GET /api/live, written straight into the `['vehicles']` query.
- * Returns whether positions are arriving: the map then polls only as a safety net. Locally,
- * where Traccar cannot reach the API, the stream stays quiet and polling does the work.
+ * Returns whether the stream is connected and the server has the webhook configured: the map
+ * then polls only as a safety net. Locally, without a webhook secret, it polls as before.
  */
 export function useLiveVehicles(): boolean {
   const queryClient = useQueryClient();
-  const [fresh, setFresh] = useState(false);
+  const [live, setLive] = useState(false);
 
   useEffect(() => {
     const source = new EventSource('/api/live');
-    let staleTimer: ReturnType<typeof setTimeout> | undefined;
     let dropped = false;
 
-    function markStale() {
-      clearTimeout(staleTimer);
-      setFresh(false);
-    }
-
-    source.addEventListener('ready', () => {
+    source.addEventListener('ready', (e) => {
+      const { webhook } = JSON.parse((e as MessageEvent<string>).data) as { webhook: boolean };
+      setLive(webhook);
       // Back after a drop (deploy, network): catch up on what the stream missed.
       if (dropped) void queryClient.invalidateQueries({ queryKey: ['vehicles'], exact: true });
       dropped = false;
@@ -35,21 +28,15 @@ export function useLiveVehicles(): boolean {
       queryClient.setQueryData<Vehicle[]>(['vehicles'], (list) =>
         list?.map((v) => (v.id === vehicle.id ? vehicle : v)),
       );
-      setFresh(true);
-      clearTimeout(staleTimer);
-      staleTimer = setTimeout(markStale, FRESH_MS);
     });
     // EventSource reconnects by itself; until then the map polls fast again.
     source.addEventListener('error', () => {
       dropped = true;
-      markStale();
+      setLive(false);
     });
 
-    return () => {
-      clearTimeout(staleTimer);
-      source.close();
-    };
+    return () => source.close();
   }, [queryClient]);
 
-  return fresh;
+  return live;
 }

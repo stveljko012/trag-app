@@ -121,13 +121,15 @@ describe('position webhook', () => {
 describe('live stream', () => {
   it('sends published vehicles and ends when the hub closes', async () => {
     const hub = new LiveHub();
-    const app = new Hono().route('/live', liveRoutes(hub));
+    const app = new Hono().route('/live', liveRoutes(hub, true));
     const res = await app.request('/live');
     expect(res.headers.get('Content-Type')).toContain('text/event-stream');
     expect(res.headers.get('Content-Encoding')).toBe('identity');
 
     const reader = res.body!.pipeThrough(new TextDecoderStream()).getReader();
-    expect((await reader.read()).value).toContain('event: ready');
+    const ready = (await reader.read()).value!;
+    expect(ready).toContain('event: ready');
+    expect(ready).toContain('data: {"webhook":true}');
     expect(hub.size).toBe(1);
 
     hub.publish({ id: 1, name: 'BG 1234-AB' } as VehicleDto);
