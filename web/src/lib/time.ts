@@ -54,12 +54,12 @@ export function formatLongDay(day: string): string {
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
-/** "pre 5 s", "pre 3 min", "pre 2 h", then an absolute date. */
+/** "upravo", "pre 3 min", "pre 2 h" (rounded), then an absolute date. */
 export function formatAgo(iso: string, now: number = Date.now()): string {
   const s = Math.max(0, Math.round((now - new Date(iso).getTime()) / 1000));
-  if (s < 60) return `pre ${s} s`;
+  if (s < 60) return 'upravo';
   if (s < 3600) return `pre ${Math.floor(s / 60)} min`;
-  if (s < 24 * 3600) return `pre ${Math.floor(s / 3600)} h`;
+  if (s < 24 * 3600) return `pre ${Math.round(s / 3600)} h`;
   return formatDateTime(iso);
 }
 

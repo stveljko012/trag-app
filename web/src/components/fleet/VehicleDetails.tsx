@@ -1,19 +1,10 @@
-import {
-  ChevronDown,
-  ChevronUp,
-  Crosshair,
-  Engine,
-  Pencil,
-  Phone,
-  Wifi,
-  WifiOff,
-  X,
-} from 'lucide-react';
+import { ChevronDown, ChevronUp, Crosshair, Engine, Pencil, Phone, X } from 'lucide-react';
 import { type PointerEvent, useRef, useState } from 'react';
 import { useAssignDriver, useDrivers, useVehicleToday } from '../../api/queries';
 import { useMe } from '../../auth/useAuth';
 import type { RoutePoint, Vehicle } from '../../api/types';
 import { formatAgo, formatDuration, formatKm, formatTime } from '../../lib/time';
+import { useNow } from '../../lib/useNow';
 import { buttonClass, cn, initials, plateClass, STATE_TONE } from '../../lib/ui';
 import {
   displayState,
@@ -24,7 +15,9 @@ import {
 } from '../../lib/vehicleState';
 import { Missing } from '../Missing';
 import { Select } from '../Select';
-import { Badge, ErrorMessage, Stat } from '../ui';
+import { ErrorMessage, Stat } from '../ui';
+
+const SIGNAL_CLOCK_MS = 60_000;
 
 // Radix Select reserves '' for clearing, so "no driver" gets its own value.
 const NO_DRIVER = 'none';
@@ -62,10 +55,15 @@ export function VehicleDetails({
   const state = displayState(vehicle);
   const place = placeText(vehicle);
   const p = vehicle.position;
-  const online = vehicle.state !== 'offline';
+  const ignition = p?.ignition ?? null;
   const last = route.length - 1;
   const scrubbed = routeIndex !== null && routeIndex < last ? route[routeIndex] : undefined;
-  const actionClass = 'h-11 w-full whitespace-normal';
+  // Its own slow clock, so "Poslednji signal" does not change every second.
+  const signalClock = useNow(SIGNAL_CLOCK_MS);
+  const actionClass = 'h-10 w-full whitespace-normal text-sm';
+  // Smaller than the default Stat: the card shares the screen with the map.
+  const statClass =
+    'px-2.5 py-2 [&>div:first-child]:text-[0.72rem] [&>div:last-child]:text-[0.95rem]';
 
   // Phones: drag the header down to collapse the sheet, or up to open it.
   const [dragY, setDragY] = useState<number | null>(null);
@@ -162,32 +160,39 @@ export function VehicleDetails({
         {/* Collapsing is for phones, where the card covers the map; desktop has room for it. */}
         <div
           className={cn(
-            'flex min-h-0 flex-col gap-4 overflow-y-auto px-4 pt-[18px] pb-4',
+            'flex min-h-0 flex-col gap-3 overflow-y-auto px-4 pt-3.5 pb-4 text-sm',
             collapsed && 'max-md:hidden',
           )}
         >
           <div className="flex items-start gap-2">
             <div className="min-w-0 flex-1">
-              <div className={cn(plateClass, 'text-2xl leading-tight')}>{vehicle.name}</div>
-              <div className="text-muted">{vehicle.model ?? 'Model nepoznat'}</div>
-              <span
+              <div className="flex items-center gap-2">
+                <span className={cn(plateClass, 'text-xl leading-tight')}>{vehicle.name}</span>
+                <Engine
+                  size={16}
+                  role="img"
+                  aria-label={`Motor: ${ignitionLabel(ignition)}`}
+                  className={cn(
+                    'shrink-0',
+                    ignition === true ? 'text-success' : 'text-slate-400',
+                    ignition === null && 'opacity-50',
+                  )}
+                >
+                  <title>{`Motor: ${ignitionLabel(ignition)}`}</title>
+                </Engine>
+              </div>
+              <div className="text-[0.8rem] text-muted">{vehicle.model ?? 'Model nepoznat'}</div>
+              <div
                 className={cn(
-                  'mt-1.5 inline-flex h-6 items-center gap-1.5 rounded-full border px-2 text-[0.8rem] font-semibold',
-                  online
-                    ? 'border-green-200 bg-green-50 text-green-700'
-                    : 'border-border bg-surface-muted text-muted',
+                  'mt-0.5 text-[0.75rem] font-medium',
+                  state === 'offline' ? 'text-muted' : 'text-success',
                 )}
-                title={
-                  vehicle.lastUpdate
-                    ? `Poslednji signal ${formatAgo(vehicle.lastUpdate, now)}`
-                    : 'Nema signala'
-                }
               >
-                {online ? <Wifi size={13} /> : <WifiOff size={13} />}
-                {online ? 'Online' : 'Offline'}
-              </span>
+                {vehicle.lastUpdate
+                  ? `Poslednji signal ${formatAgo(vehicle.lastUpdate, signalClock)}`
+                  : 'Nema signala'}
+              </div>
             </div>
-            <Badge state={state}>{STATE_LABEL[state]}</Badge>
             <button
               type="button"
               className={buttonClass({ icon: true })}
@@ -198,42 +203,39 @@ export function VehicleDetails({
             </button>
           </div>
 
-          <div className={cn('rounded-lg border px-3.5 py-3', STATE_TONE[state].panel)}>
+          <div className={cn('rounded-lg border px-3 py-2', STATE_TONE[state].panel)}>
             <div className="font-bold">
               {state === 'moving' ? STATE_LABEL.moving : statusText(vehicle, now)}
             </div>
             <div>{place}</div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <Stat label="Brzina" value={p ? `${Math.round(p.speedKmh)} km/h` : '-'} />
-            <Stat label="Danas" value={today.data ? formatKm(today.data.distanceKm) : '-'} />
+          <div className="grid grid-cols-2 gap-1.5">
             <Stat
-              className="col-span-2"
-              label={
-                <span className="inline-flex items-center gap-1">
-                  <Engine
-                    size={14}
-                    className={cn(
-                      p?.ignition === true ? 'text-success' : 'text-slate-400',
-                      (p?.ignition ?? null) === null && 'opacity-50',
-                    )}
-                  />
-                  Motor · {ignitionLabel(p?.ignition ?? null)}
-                </span>
-              }
+              className={statClass}
+              label="Brzina"
+              value={p ? `${Math.round(p.speedKmh)} km/h` : '-'}
+            />
+            <Stat
+              className={statClass}
+              label="Danas"
+              value={today.data ? formatKm(today.data.distanceKm) : '-'}
+            />
+            <Stat
+              className={cn(statClass, 'col-span-2')}
+              label="Motor danas"
               value={today.data ? formatDuration(today.data.engineS) : '-'}
             />
           </div>
 
-          <div className="flex flex-col gap-2.5 rounded-lg border border-border p-3">
-            <div className="flex items-center gap-3">
-              <span className="grid size-10 shrink-0 place-items-center rounded-full bg-primary-soft font-bold text-primary">
+          <div className="flex flex-col gap-2 rounded-lg border border-border px-3 py-2.5">
+            <div className="flex items-center gap-2.5">
+              <span className="grid size-8 shrink-0 text-[0.8rem] place-items-center rounded-full bg-primary-soft font-bold text-primary">
                 {vehicle.driver ? initials(vehicle.driver.name) : '?'}
               </span>
               <span className="min-w-0 flex-1">
                 <div className="truncate font-semibold">{vehicle.driver?.name ?? 'Bez vozača'}</div>
-                <div className="text-muted">
+                <div className="text-[0.8rem] text-muted">
                   Vozač{vehicle.driver?.phone ? ` · ${vehicle.driver.phone}` : ''}
                 </div>
               </span>
@@ -280,7 +282,7 @@ export function VehicleDetails({
             {assign.error && <ErrorMessage>{assign.error.message}</ErrorMessage>}
           </div>
 
-          <div className="grid grid-cols-2 gap-2.5">
+          <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
               className={cn(

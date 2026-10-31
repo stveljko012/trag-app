@@ -185,12 +185,12 @@
   color: #64748b;
 }
 
-/* Slightly darker, calmer base map so markers and routes stand out. Tiles only, not overlays. */
-.leaflet-tile-pane {
-  filter: brightness(0.64) saturate(0.6);
-}
-
 /* The map takes focus on click; show the ring only when it was reached with the keyboard. */
 .leaflet-container:focus:not(:focus-visible) {
   outline: none;
+}
+
+/* Neutral, mostly gray base map so markers and routes stand out. Tiles only, not overlays. */
+.leaflet-tile-pane {
+  filter: grayscale(0.55) contrast(0.92) brightness(1.02);
 }

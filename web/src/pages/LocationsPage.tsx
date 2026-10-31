@@ -228,7 +228,7 @@ export function LocationsPage() {
               </div>
             ) : (
               <div className="rounded-lg bg-primary-soft px-3 py-2.5 text-[0.85rem] text-primary-hover">
-                Ova lokacija nije krug; njen oblik se menja samo u Traccaru.
+                Ova lokacija nije krug; njen oblik se menja samo u GPS sistemu.
               </div>
             )}
 

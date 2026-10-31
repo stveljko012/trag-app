@@ -4,7 +4,7 @@ import type { FleetEvent } from '../api/types';
 import { Select } from '../components/Select';
 import { alarmLabel, EVENT_FILTER_TYPES, eventLabel } from '../lib/events';
 import { belgradeDay, formatDateTime } from '../lib/time';
-import { EmptyState, ErrorMessage } from '../components/ui';
+import { EmptyState, ErrorMessage, Skeleton } from '../components/ui';
 import { cardClass, cn, inputClass, plateClass } from '../lib/ui';
 
 // Radix Select reserves '' for clearing, so "no filter" gets its own value.
@@ -35,30 +35,32 @@ export function EventsPage() {
       </div>
 
       <div className={cardClass}>
-        <div className="flex flex-wrap items-end gap-3 p-4">
-          <label className="flex flex-col gap-1 text-[0.8rem] text-muted">
+        {/* Phones: a 2 x 2 grid (dates, then type and vehicle). */}
+        <div className="flex flex-wrap items-end gap-3 p-4 max-md:grid max-md:grid-cols-2">
+          <label className="flex min-w-0 flex-col gap-1 text-[0.8rem] text-muted">
             Od
             <input
-              className={inputClass}
+              className={cn(inputClass, 'max-md:w-full max-md:min-w-0')}
               type="date"
               value={from}
               max={today}
               onChange={(e) => e.target.value && setFrom(e.target.value)}
             />
           </label>
-          <label className="flex flex-col gap-1 text-[0.8rem] text-muted">
+          <label className="flex min-w-0 flex-col gap-1 text-[0.8rem] text-muted">
             Do
             <input
-              className={inputClass}
+              className={cn(inputClass, 'max-md:w-full max-md:min-w-0')}
               type="date"
               value={to}
               max={today}
               onChange={(e) => e.target.value && setTo(e.target.value)}
             />
           </label>
-          <div className="flex flex-col gap-1 text-[0.8rem] text-muted">
+          <div className="flex min-w-0 flex-col gap-1 text-[0.8rem] text-muted">
             Vrsta
             <Select
+              className="max-md:w-full max-md:min-w-0"
               ariaLabel="Vrsta događaja"
               value={type || ALL}
               onValueChange={(t) => setType(t === ALL ? '' : t)}
@@ -68,9 +70,10 @@ export function EventsPage() {
               ]}
             />
           </div>
-          <div className="flex flex-col gap-1 text-[0.8rem] text-muted">
+          <div className="flex min-w-0 flex-col gap-1 text-[0.8rem] text-muted">
             Vozilo
             <Select
+              className="max-md:w-full max-md:min-w-0"
               ariaLabel="Vozilo"
               value={vehicle !== undefined ? String(vehicle) : ALL}
               onValueChange={(id) => setVehicle(id === ALL ? undefined : Number(id))}
@@ -87,7 +90,7 @@ export function EventsPage() {
       </div>
 
       <div className={cardClass}>
-        {events.isPending && <EmptyState>Učitavanje…</EmptyState>}
+        {events.isPending && <EventsSkeleton />}
         {events.isError && <EmptyState>{events.error.message}</EmptyState>}
         {events.data?.length === 0 && <EmptyState>Nema događaja za izabrani period.</EmptyState>}
         {!!events.data?.length && (
@@ -145,6 +148,26 @@ export function EventsPage() {
         )}
       </div>
     </section>
+  );
+}
+
+/** Placeholder rows shaped like the table (and like its stacked phone layout). */
+function EventsSkeleton() {
+  return (
+    <div role="status" className="divide-y divide-border">
+      <span className="sr-only">Učitavanje…</span>
+      {[0, 1, 2, 3, 4, 5].map((i) => (
+        <div
+          key={i}
+          className="grid grid-cols-[150px_110px_minmax(0,1fr)_minmax(0,1fr)] items-center gap-x-8 px-4 py-3.5 max-sm:grid-cols-[1fr_auto] max-sm:gap-x-4 max-sm:gap-y-2 max-sm:py-3"
+        >
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-4 w-16" />
+          <Skeleton className="h-4 w-28 max-sm:col-span-full" />
+          <Skeleton className={cn('h-4 max-sm:col-span-full', i % 2 ? 'w-24' : 'w-40')} />
+        </div>
+      ))}
+    </div>
   );
 }
 

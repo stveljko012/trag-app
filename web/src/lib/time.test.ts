@@ -29,7 +29,7 @@ describe('time helpers', () => {
 
   it('formats relative times', () => {
     const now = Date.parse('2026-10-30T12:00:00Z');
-    expect(formatAgo('2026-10-30T11:59:55Z', now)).toBe('pre 5 s');
+    expect(formatAgo('2026-10-30T11:59:55Z', now)).toBe('upravo');
     expect(formatAgo('2026-10-30T11:57:00Z', now)).toBe('pre 3 min');
     expect(formatAgo('2026-10-30T10:00:00Z', now)).toBe('pre 2 h');
   });

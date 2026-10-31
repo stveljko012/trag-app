@@ -40,7 +40,7 @@ export class LocationNotFoundError extends Error {
 
 export class ShapeNotEditableError extends Error {
   constructor() {
-    super('Oblik ove lokacije nije krug i menja se samo u Traccaru');
+    super('Oblik ove lokacije nije krug i menja se samo u GPS sistemu');
   }
 }
 

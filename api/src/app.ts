@@ -33,7 +33,7 @@ export function buildApp(deps: AppDeps) {
       return c.json(
         {
           error: denied
-            ? 'GPS server je odbio zahtev (proverite prava Traccar korisnika)'
+            ? 'GPS server je odbio zahtev (proverite prava naloga na GPS serveru)'
             : 'Greška u komunikaciji sa GPS serverom',
         },
         502,
