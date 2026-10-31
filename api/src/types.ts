@@ -6,6 +6,10 @@ export interface AppDeps {
   db: Db;
   traccar: TraccarClient;
   publicDir: string;
+  /** Page title, e.g. "Trag · Unique Garden". */
+  pageTitle?: string;
+  /** The client this instance belongs to, shown on the login page and in the account menu. */
+  clientName?: string;
   sessionSecret: string;
   secureCookies: boolean;
 }

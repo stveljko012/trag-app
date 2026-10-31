@@ -15,6 +15,7 @@ import { Select } from '../components/Select';
 import { EmptyState, ErrorMessage } from '../components/ui';
 import { formatDateTime } from '../lib/time';
 import { buttonClass, cn, initials, inputClass, plateClass } from '../lib/ui';
+import { PageTitle } from '../components/PageTitle';
 
 // Radix Select reserves '' for clearing, so "no vehicle" gets its own value.
 const NO_VEHICLE = 'none';
@@ -143,8 +144,10 @@ export function DriversPage() {
   return (
     <div className="grid h-[calc(100dvh-var(--footer-height))] min-h-[560px] grid-cols-[400px_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] max-md:flex max-md:h-auto max-md:min-h-0 max-md:flex-col">
       <header className="col-span-full flex items-center gap-4 border-b border-border bg-surface px-5 py-3.5 max-md:px-4 max-md:py-3">
-        <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em]">Vozači</h1>
-        <span className="text-muted">{all.length}</span>
+        <PageTitle>
+          <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em]">Vozači</h1>
+          <span className="text-muted">{all.length}</span>
+        </PageTitle>
       </header>
 
       <section

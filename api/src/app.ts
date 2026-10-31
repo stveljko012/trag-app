@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { serveStatic } from '@hono/node-server/serve-static';
-import { Hono } from 'hono';
+import { type Context, Hono } from 'hono';
 import { HTTPException } from 'hono/http-exception';
 import { requireAuth } from './auth/middleware.js';
 import {
@@ -48,8 +48,9 @@ export function buildApp(deps: AppDeps) {
     return c.json({ error: 'Internal server error' }, 500);
   });
 
-  // Public: health, auth (login/logout/me handle their own auth).
+  // Public: health, config (the login page needs it), auth (login/logout/me handle their own auth).
   api.route('/health', healthRoutes(deps.db, deps.traccar));
+  api.get('/config', (c) => c.json({ clientName: deps.clientName ?? null }));
   api.route('/auth', authRoutes(deps));
 
   // Everything below requires a session.
@@ -77,18 +78,30 @@ export function buildApp(deps: AppDeps) {
       c.req.path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
     );
   });
+
+  // index.html carries this client's page title, so it never comes straight from disk: not for
+  // "/" or "/index.html" (which the service worker caches), nor as the SPA fallback below.
+  const indexPath = resolve(root, 'index.html');
+  let indexHtml: string | undefined;
+  const serveIndex = (c: Context) => {
+    if (indexHtml === undefined) {
+      if (!existsSync(indexPath)) return c.text('Web app not built', 404);
+      const title = `<title>${escapeHtml(deps.pageTitle ?? 'Trag')}</title>`;
+      indexHtml = readFileSync(indexPath, 'utf8').replace(/<title>[^<]*<\/title>/, title);
+    }
+    return c.html(indexHtml);
+  };
+  app.get('/', serveIndex);
+  app.get('/index.html', serveIndex);
+
   if (existsSync(root)) app.use('*', serveStatic({ root }));
 
   // 3. SPA fallback: client-side routes get index.html.
-  const indexPath = resolve(root, 'index.html');
-  let indexHtml: string | undefined;
-  app.get('*', (c) => {
-    if (indexHtml === undefined) {
-      if (!existsSync(indexPath)) return c.text('Web app not built', 404);
-      indexHtml = readFileSync(indexPath, 'utf8');
-    }
-    return c.html(indexHtml);
-  });
+  app.get('*', serveIndex);
 
   return app;
+}
+
+function escapeHtml(text: string): string {
+  return text.replace(/[&<>"]/g, (ch) => `&#${ch.charCodeAt(0)};`);
 }

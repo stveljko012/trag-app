@@ -12,6 +12,7 @@ import { LocationsLayer } from '../components/map/LocationsLayer';
 import { formatRate } from '../lib/money';
 import { EmptyState, ErrorMessage } from '../components/ui';
 import { buttonClass, chipClass, cn, inputClass } from '../lib/ui';
+import { PageTitle } from '../components/PageTitle';
 
 const MIN_RADIUS = 10;
 const MAX_RADIUS = 5000;
@@ -199,8 +200,10 @@ export function LocationsPage() {
   return (
     <div className="grid h-[calc(100dvh-var(--footer-height))] min-h-[560px] grid-cols-[400px_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] max-md:flex max-md:h-auto max-md:min-h-0 max-md:flex-col">
       <header className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border bg-surface px-5 py-3.5 max-md:order-first max-md:px-4 max-md:py-3">
-        <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em]">Lokacije</h1>
-        <span className="text-muted">{all.length}</span>
+        <PageTitle>
+          <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em]">Lokacije</h1>
+          <span className="text-muted">{all.length}</span>
+        </PageTitle>
       </header>
 
       <section className="flex min-h-0 flex-col border-r border-border bg-surface max-md:border-r-0">

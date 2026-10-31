@@ -6,6 +6,7 @@ import { alarmLabel, EVENT_FILTER_TYPES, eventLabel } from '../lib/events';
 import { belgradeDay, formatDateTime } from '../lib/time';
 import { EmptyState, ErrorMessage, Skeleton } from '../components/ui';
 import { cardClass, cn, inputClass, plateClass } from '../lib/ui';
+import { PageTitle } from '../components/PageTitle';
 
 // Radix Select reserves '' for clearing, so "no filter" gets its own value.
 const ALL = 'all';
@@ -25,7 +26,9 @@ export function EventsPage() {
     <section className="flex flex-col gap-4 p-6 max-md:p-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold tracking-[-0.01em]">Događaji</h1>
+          <PageTitle>
+            <h1 className="text-2xl font-bold tracking-[-0.01em]">Događaji</h1>
+          </PageTitle>
           <p className="mt-0.5 text-[0.9rem] text-muted">
             {events.data
               ? `${events.data.length} događaja`

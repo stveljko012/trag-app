@@ -150,8 +150,10 @@ needed, the workflow uses `GITHUB_TOKEN`.
    ADMIN_EMAIL=<owner email>
    ADMIN_PASSWORD=<at least 10 characters>
    ADMIN_NAME=<owner name>
+   CLIENT_NAME=<client name, e.g. Unique Garden>
    ```
-   The owner is created on first start while the users table is empty.
+   The owner is created on first start while the users table is empty. `CLIENT_NAME` shows in
+   the page title ("Trag · Unique Garden"); without it the title is just "Trag".
 7. **Compose:** add the `trag` service from `deploy/compose.snippet.yml` to
    `/opt/traccar/compose.yml`, with the image tag you want to run.
 8. **Caddy:** add the client block from `deploy/Caddyfile.snippet`, then

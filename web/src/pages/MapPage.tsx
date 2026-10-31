@@ -18,6 +18,7 @@ import { buttonClass, cn, themeColor } from '../lib/ui';
 import { useNow } from '../lib/useNow';
 import { belgradeDay } from '../lib/time';
 import { displayState, STATE_LABEL } from '../lib/vehicleState';
+import { PageTitle } from '../components/PageTitle';
 
 const REFRESH_MS = 10_000;
 // "Ask the map" bar is hidden until the AI assistant (Phase 5) exists.
@@ -150,7 +151,9 @@ export function MapPage() {
     <div className="grid h-[calc(100dvh-var(--footer-height))] min-h-[560px] grid-cols-[340px_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] max-md:flex max-md:h-auto max-md:min-h-0 max-md:flex-col">
       {/* Phones: hidden, the map needs the height more than the title. */}
       <header className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border bg-surface px-5 py-3.5 max-md:hidden">
-        <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em]">Mapa uživo</h1>
+        <PageTitle>
+          <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em]">Mapa uživo</h1>
+        </PageTitle>
         <div className="ml-auto flex flex-wrap items-center gap-2.5">
           {me?.role === 'owner' && (
             <Link

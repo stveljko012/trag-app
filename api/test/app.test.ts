@@ -19,6 +19,8 @@ beforeAll(() => {
     db,
     traccar: {} as TraccarClient,
     publicDir: dir,
+    pageTitle: 'Trag · Bašta & <Co>',
+    clientName: 'Bašta',
     sessionSecret: 'x'.repeat(32),
     secureCookies: false,
   });
@@ -66,6 +68,12 @@ describe('app routing', () => {
     });
   });
 
+  it('serves the public instance config', async () => {
+    const res = await app.request('/api/config');
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ clientName: 'Bašta' });
+  });
+
   it('requires a session for other /api routes and never returns the SPA', async () => {
     const res = await app.request('/api/nope');
     expect(res.status).toBe(401);
@@ -105,7 +113,15 @@ describe('app routing', () => {
     const res = await app.request('/history');
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/html');
-    expect(await res.text()).toContain('<title>Trag</title>');
+    expect(await res.text()).toContain('<title>Trag · Bašta &#38; &#60;Co&#62;</title>');
     expect(res.headers.get('cache-control')).toBe('no-cache');
+  });
+
+  it('puts the client title in index.html at every path, escaped', async () => {
+    for (const path of ['/', '/index.html', '/history']) {
+      const res = await app.request(path);
+      expect(res.status).toBe(200);
+      expect(await res.text()).toContain('<title>Trag · Bašta &#38; &#60;Co&#62;</title>');
+    }
   });
 });

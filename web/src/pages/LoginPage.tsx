@@ -1,5 +1,6 @@
 import { type FormEvent, useState } from 'react';
 import { Navigate, useLocation, useNavigate } from 'react-router';
+import { useAppConfig } from '../api/queries';
 import { useLogin, useMe } from '../auth/useAuth';
 import { Footer } from '../components/Footer';
 import { Logo } from '../components/Logo';
@@ -9,6 +10,7 @@ import { buttonClass, cardClass, cn, inputClass } from '../lib/ui';
 export function LoginPage() {
   const me = useMe();
   const login = useLogin();
+  const clientName = useAppConfig().data?.clientName;
   const navigate = useNavigate();
   const location = useLocation();
   const from = (location.state as { from?: string } | null)?.from ?? '/';
@@ -28,6 +30,11 @@ export function LoginPage() {
         <div className="mb-6 flex flex-col gap-5">
           <Logo />
           <div>
+            {clientName && (
+              <div className="mb-1 text-[0.8rem] font-semibold tracking-[0.04em] text-primary uppercase">
+                {clientName}
+              </div>
+            )}
             <h1 className="text-2xl font-bold tracking-[-0.01em]">Prijava</h1>
             <p className="mt-1 text-[0.95rem] text-muted">Prijavite se na svoj Trag nalog.</p>
           </div>

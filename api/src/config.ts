@@ -9,6 +9,8 @@ const envSchema = z.object({
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   PORT: z.coerce.number().int().positive().default(3000),
   APP_NAME: z.string().default('Trag'),
+  // Shown in the page title ("Trag · Unique Garden"), so tabs and bookmarks name the client.
+  CLIENT_NAME: optional,
   PUBLIC_DIR: z.string().default('./public'),
   DATABASE_URL: z.string().min(1),
   SESSION_SECRET: z.string().min(32, 'must be at least 32 characters'),

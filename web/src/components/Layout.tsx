@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet } from 'react-router';
-import { useVehicles } from '../api/queries';
+import { useAppConfig, useVehicles } from '../api/queries';
 import { useLogout, useMe } from '../auth/useAuth';
 import { buttonClass, cn, initials } from '../lib/ui';
 import { Footer } from './Footer';
@@ -36,6 +36,7 @@ export function Layout() {
   const { data: user } = useMe();
   const logout = useLogout();
   const vehicles = useVehicles();
+  const clientName = useAppConfig().data?.clientName;
   const [menuOpen, setMenuOpen] = useState(false);
   const [installOpen, setInstallOpen] = useState(false);
   const canInstall = useCanInstall();
@@ -96,6 +97,11 @@ export function Layout() {
                   role="menu"
                   className="absolute bottom-0 left-[calc(100%+10px)] z-1600 min-w-[220px] rounded-xl border border-border bg-surface p-3 shadow-pop max-md:top-[calc(100%+8px)] max-md:right-0 max-md:bottom-auto max-md:left-auto"
                 >
+                  {clientName && (
+                    <div className="mb-1.5 text-[0.75rem] font-semibold tracking-[0.04em] text-primary uppercase">
+                      {clientName}
+                    </div>
+                  )}
                   <div className="font-semibold">{user.name}</div>
                   <div className="mb-2.5 text-[0.85rem] text-muted">
                     {ROLE_LABEL[user.role]} · {user.email}

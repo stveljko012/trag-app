@@ -18,6 +18,7 @@ import {
 } from '../lib/time';
 import { EmptyState, ErrorMessage, Skeleton, Stat } from '../components/ui';
 import { buttonClass, cn, inputClass, themeColor } from '../lib/ui';
+import { PageTitle } from '../components/PageTitle';
 
 type Entry =
   { kind: 'trip'; trip: Trip; index: number } | { kind: 'stop'; stop: Stop; index: number };
@@ -110,7 +111,9 @@ export function HistoryPage() {
     <div className="grid h-[calc(100dvh-var(--footer-height))] min-h-[520px] grid-cols-[minmax(0,1fr)_380px] grid-rows-[auto_minmax(0,1fr)] max-md:flex max-md:h-[calc(100dvh-var(--topbar-height))] max-md:min-h-[480px] max-md:flex-col">
       {/* Phones: one row of controls, no title and no "Danas" (the date picker covers it). */}
       <div className="col-span-full flex flex-wrap items-center gap-2 border-b border-border bg-surface px-4 py-3 max-md:flex-nowrap max-md:py-2.5">
-        <h1 className="mr-auto text-xl font-bold max-md:hidden">Istorija</h1>
+        <PageTitle className="mr-auto max-md:hidden">
+          <h1 className="text-xl font-bold">Istorija</h1>
+        </PageTitle>
         <Select
           className="max-md:min-w-0 max-md:flex-1"
           ariaLabel="Vozilo"

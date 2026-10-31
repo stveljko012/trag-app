@@ -39,6 +39,8 @@ const app = buildApp({
   db,
   traccar,
   publicDir: config.PUBLIC_DIR,
+  clientName: config.CLIENT_NAME,
+  pageTitle: config.CLIENT_NAME ? `${config.APP_NAME} · ${config.CLIENT_NAME}` : config.APP_NAME,
   sessionSecret: config.SESSION_SECRET,
   secureCookies: config.NODE_ENV === 'production',
 });

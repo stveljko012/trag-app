@@ -12,6 +12,15 @@ import type {
   VehicleToday,
 } from './types';
 
+/** Instance settings from the server; public and fixed until the next restart. */
+export function useAppConfig() {
+  return useQuery({
+    queryKey: ['config'],
+    queryFn: () => apiFetch<{ clientName: string | null }>('/config'),
+    staleTime: Infinity,
+  });
+}
+
 export function useVehicles({ refetchInterval }: { refetchInterval?: number } = {}) {
   return useQuery({
     queryKey: ['vehicles'],
