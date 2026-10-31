@@ -190,7 +190,7 @@
   outline: none;
 }
 
-/* Neutral, mostly gray base map so markers and routes stand out. Tiles only, not overlays. */
-.leaflet-tile-pane {
+/* Neutral, mostly gray street map so markers and routes stand out. Not on satellite imagery. */
+.trag-tiles-neutral {
   filter: grayscale(0.55) contrast(0.92) brightness(1.02);
 }

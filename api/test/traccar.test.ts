@@ -18,7 +18,7 @@ describe('TraccarClient', () => {
     await client.getDevices();
 
     const [url, init] = fetch.mock.calls[0]!;
-    expect(String(url)).toBe('http://traccar:8082/api/devices');
+    expect(String(url)).toBe('http://traccar:8082/api/devices?all=true');
     const headers = init!.headers as Record<string, string>;
     expect(headers.Authorization).toBe('Bearer tok');
     expect(headers.Accept).toBe('application/json');

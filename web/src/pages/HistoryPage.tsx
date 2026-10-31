@@ -259,27 +259,32 @@ export function HistoryPage() {
         </div>
 
         <ol className="flex flex-col">
-          {entries.map((e) => {
-            const isSelected = selection?.kind === e.kind && selection.index === e.index;
-            return (
-              <li key={`${e.kind}-${e.index}`}>
-                <button
-                  type="button"
-                  className={cn(
-                    'grid w-full grid-cols-[28px_1fr] gap-x-2.5 gap-y-0.5 rounded-lg px-2 py-2.5 text-left hover:bg-surface-muted',
-                    isSelected && 'bg-primary-soft hover:bg-primary-soft',
-                  )}
-                  onClick={() => setSelection(isSelected ? null : { kind: e.kind, index: e.index })}
-                >
-                  {e.kind === 'trip' ? (
-                    <TripEntry trip={e.trip} />
-                  ) : (
-                    <StopEntry stop={e.stop} number={e.index + 1} />
-                  )}
-                </button>
-              </li>
-            );
-          })}
+          {/* Trips and stops interleave by time, so the list waits for both instead of
+              showing trips first and then shuffling stops in between them. */}
+          {!panelLoading &&
+            entries.map((e) => {
+              const isSelected = selection?.kind === e.kind && selection.index === e.index;
+              return (
+                <li key={`${e.kind}-${e.index}`}>
+                  <button
+                    type="button"
+                    className={cn(
+                      'grid w-full grid-cols-[28px_1fr] gap-x-2.5 gap-y-0.5 rounded-lg px-2 py-2.5 text-left hover:bg-surface-muted',
+                      isSelected && 'bg-primary-soft hover:bg-primary-soft',
+                    )}
+                    onClick={() =>
+                      setSelection(isSelected ? null : { kind: e.kind, index: e.index })
+                    }
+                  >
+                    {e.kind === 'trip' ? (
+                      <TripEntry trip={e.trip} />
+                    ) : (
+                      <StopEntry stop={e.stop} number={e.index + 1} />
+                    )}
+                  </button>
+                </li>
+              );
+            })}
           {panelLoading &&
             [0, 1, 2, 3, 4].map((i) => (
               <li

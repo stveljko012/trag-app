@@ -4,15 +4,33 @@ import { MapContainer, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 const BELGRADE: [number, number] = [44.8125, 20.4612];
 
+export type Basemap = 'map' | 'satellite';
+
+// Esri imagery needs no key; its native zoom stops at 18 in most of Serbia, so 19 upscales.
+const TILES: Record<Basemap, { url: string; attribution: string; maxNativeZoom: number }> = {
+  map: {
+    url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+    maxNativeZoom: 19,
+  },
+  satellite: {
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    attribution: 'Tiles &copy; Esri, Maxar, Earthstar Geographics',
+    maxNativeZoom: 18,
+  },
+};
+
 export function BaseMap({
   children,
   className,
   zoomControl = true,
+  basemap = 'map',
   onMap,
 }: {
   children?: ReactNode;
   className?: string;
   zoomControl?: boolean;
+  basemap?: Basemap;
   /** Receives the Leaflet map, for controls rendered outside the map. */
   onMap?: (map: LeafletMap | null) => void;
 }) {
@@ -24,10 +42,12 @@ export function BaseMap({
       zoomControl={zoomControl}
       ref={onMap}
     >
+      {/* Keyed so a switch builds a new layer: attribution and zoom limits are not mutable. */}
       <TileLayer
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        key={basemap}
+        {...TILES[basemap]}
         maxZoom={19}
+        className={basemap === 'map' ? 'trag-tiles-neutral' : undefined}
       />
       {children}
     </MapContainer>

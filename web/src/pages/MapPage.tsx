@@ -1,5 +1,15 @@
 import type { Map as LeafletMap } from 'leaflet';
-import { Focus, Maximize, MessageSquare, Minimize, Minus, Plus, ScanSearch } from 'lucide-react';
+import {
+  Focus,
+  Map as MapIcon,
+  Maximize,
+  MessageSquare,
+  Minimize,
+  Minus,
+  Plus,
+  Satellite,
+  ScanSearch,
+} from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { CircleMarker, Polyline } from 'react-leaflet';
 import { Link } from 'react-router';
@@ -8,7 +18,7 @@ import { useMe } from '../auth/useAuth';
 import { VehicleDetails } from '../components/fleet/VehicleDetails';
 import { VehicleList } from '../components/fleet/VehicleList';
 import { AnimatedMarker, MOVE_MS } from '../components/map/AnimatedMarker';
-import { BaseMap, MapClick } from '../components/map/BaseMap';
+import { BaseMap, type Basemap, MapClick } from '../components/map/BaseMap';
 import { vehicleIcon } from '../components/map/icons';
 import { LocationsLayer } from '../components/map/LocationsLayer';
 import { Missing } from '../components/Missing';
@@ -21,6 +31,16 @@ import { displayState, STATE_LABEL } from '../lib/vehicleState';
 import { PageTitle } from '../components/PageTitle';
 
 const REFRESH_MS = 10_000;
+// The viewer's last base map choice; only a convenience, so storage errors are ignored.
+const BASEMAP_KEY = 'trag.map.basemap';
+
+function readBasemap(): Basemap {
+  try {
+    return localStorage.getItem(BASEMAP_KEY) === 'satellite' ? 'satellite' : 'map';
+  } catch {
+    return 'map';
+  }
+}
 // "Ask the map" bar is hidden until the AI assistant (Phase 5) exists.
 const SHOW_ASK = false;
 const ASK_EXAMPLES = [
@@ -39,6 +59,7 @@ export function MapPage() {
   const [map, setMap] = useState<LeafletMap | null>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const [fullscreen, setFullscreen] = useState(false);
+  const [basemap, setBasemap] = useState<Basemap>(readBasemap);
 
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
@@ -138,6 +159,16 @@ export function MapPage() {
     return () => document.removeEventListener('fullscreenchange', onChange);
   }, [map]);
 
+  function toggleBasemap() {
+    const next = basemap === 'map' ? 'satellite' : 'map';
+    setBasemap(next);
+    try {
+      localStorage.setItem(BASEMAP_KEY, next);
+    } catch {
+      // Private mode: the choice just is not remembered.
+    }
+  }
+
   function toggleFullscreen() {
     if (document.fullscreenElement) void document.exitFullscreen();
     else void wrapRef.current?.requestFullscreen();
@@ -186,7 +217,7 @@ export function MapPage() {
         ref={wrapRef}
         className="relative min-h-0 bg-[#e8ecef] fullscreen:h-screen fullscreen:w-screen max-md:h-[calc(100dvh-var(--topbar-height)-60px)] max-md:min-h-[480px] max-md:shrink-0"
       >
-        <BaseMap className="absolute inset-0" zoomControl={false} onMap={setMap}>
+        <BaseMap className="absolute inset-0" zoomControl={false} basemap={basemap} onMap={setMap}>
           <MapClick onClick={() => select(null)} />
           {layers.locations && locations.data && <LocationsLayer locations={locations.data} />}
           {routePoints.length > 1 && (
@@ -276,6 +307,18 @@ export function MapPage() {
             </button>
           </div>
           <div className={cn(floatPanel, 'overflow-hidden rounded-[10px]')}>
+            <button
+              type="button"
+              className={controlButton}
+              aria-label={basemap === 'map' ? 'Satelitski prikaz' : 'Prikaz mape'}
+              title={basemap === 'map' ? 'Satelitski prikaz' : 'Prikaz mape'}
+              onClick={toggleBasemap}
+            >
+              {basemap === 'map' ? <Satellite size={19} /> : <MapIcon size={19} />}
+            </button>
+          </div>
+          {/* Phones: hidden, iPhone Safari has no element fullscreen and the map fills the screen anyway. */}
+          <div className={cn(floatPanel, 'overflow-hidden rounded-[10px] max-md:hidden')}>
             <button
               type="button"
               className={controlButton}

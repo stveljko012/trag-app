@@ -71,7 +71,11 @@ export class TraccarError extends Error {
   }
 }
 
-type QueryValue = string | number | Date | readonly (string | number)[] | undefined;
+type QueryValue = string | number | boolean | Date | readonly (string | number)[] | undefined;
+
+// The service user is an admin, and Traccar lists only entities linked to the user unless
+// `all=true` is passed. Used on every list endpoint that supports it.
+const ALL = { all: true } as const;
 
 export class TraccarClient {
   private readonly baseUrl: string;
@@ -152,7 +156,7 @@ export class TraccarClient {
   }
 
   getDevices(): Promise<Device[]> {
-    return this.request('GET', '/devices');
+    return this.request('GET', '/devices', { query: ALL });
   }
 
   /** Latest known position of every device the user can see. */
@@ -196,7 +200,7 @@ export class TraccarClient {
   }
 
   getGeofences(): Promise<Geofence[]> {
-    return this.request('GET', '/geofences');
+    return this.request('GET', '/geofences', { query: ALL });
   }
 
   getGeofence(id: number): Promise<Geofence> {
