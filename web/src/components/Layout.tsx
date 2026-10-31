@@ -7,6 +7,7 @@ import {
   Map,
   MapPin,
   MessageSquare,
+  Smartphone,
   Users,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -15,6 +16,8 @@ import { useVehicles } from '../api/queries';
 import { useLogout, useMe } from '../auth/useAuth';
 import { buttonClass, cn, initials } from '../lib/ui';
 import { Footer } from './Footer';
+import { useCanInstall } from '../lib/install';
+import { InstallBanner, InstallDialog } from './InstallBanner';
 import { Logo } from './Logo';
 
 const NAV: { to: string; label: string; icon: LucideIcon }[] = [
@@ -34,6 +37,8 @@ export function Layout() {
   const logout = useLogout();
   const vehicles = useVehicles();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [installOpen, setInstallOpen] = useState(false);
+  const canInstall = useCanInstall();
   const hasAlarm = vehicles.data?.some((v) => v.alarm && v.state !== 'offline') ?? false;
 
   return (
@@ -95,6 +100,18 @@ export function Layout() {
                   <div className="mb-2.5 text-[0.85rem] text-muted">
                     {ROLE_LABEL[user.role]} · {user.email}
                   </div>
+                  {canInstall && (
+                    <button
+                      type="button"
+                      className={cn(buttonClass(), 'mb-2 w-full')}
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setInstallOpen(true);
+                      }}
+                    >
+                      <Smartphone size={16} /> Instaliraj aplikaciju
+                    </button>
+                  )}
                   <button
                     type="button"
                     className={cn(buttonClass(), 'w-full')}
@@ -109,6 +126,9 @@ export function Layout() {
           </div>
         )}
       </aside>
+
+      <InstallBanner onInstall={() => setInstallOpen(true)} />
+      <InstallDialog open={installOpen} onOpenChange={setInstallOpen} />
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-y-auto">
         <main className="flex flex-[1_0_auto] flex-col">

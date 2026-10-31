@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { beforeAll, describe, expect, it } from 'vitest';
@@ -12,6 +12,8 @@ beforeAll(() => {
   const dir = mkdtempSync(join(tmpdir(), 'trag-public-'));
   writeFileSync(join(dir, 'index.html'), '<!doctype html><title>Trag</title>');
   writeFileSync(join(dir, 'app.js'), 'console.log(1)');
+  mkdirSync(join(dir, 'assets'));
+  writeFileSync(join(dir, 'assets', 'index-abc123.js'), 'console.log(2)');
   const db = { execute: async () => ({ rows: [] }) } as unknown as Db;
   app = buildApp({
     db,
@@ -89,6 +91,14 @@ describe('app routing', () => {
     const res = await app.request('/app.js');
     expect(res.status).toBe(200);
     expect(await res.text()).toBe('console.log(1)');
+    // Unhashed files (sw.js, the manifest) must be revalidated, or a deploy would not reach the app.
+    expect(res.headers.get('cache-control')).toBe('no-cache');
+  });
+
+  it('caches hashed build assets for good', async () => {
+    const res = await app.request('/assets/index-abc123.js');
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe('public, max-age=31536000, immutable');
   });
 
   it('falls back to index.html for client routes', async () => {
@@ -96,5 +106,6 @@ describe('app routing', () => {
     expect(res.status).toBe(200);
     expect(res.headers.get('content-type')).toContain('text/html');
     expect(await res.text()).toContain('<title>Trag</title>');
+    expect(res.headers.get('cache-control')).toBe('no-cache');
   });
 });

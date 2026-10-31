@@ -66,6 +66,17 @@ export function buildApp(deps: AppDeps) {
   app.all('/api/*', (c) => c.json({ error: 'Not found' }, 404));
 
   // 2. Static files from the built web app. In dev there is no build (Vite serves the SPA).
+  // Hashed build assets never change; everything else (index.html, sw.js, the manifest, icons) is
+  // revalidated so a deploy reaches browsers and the installed app right away. Set after the
+  // response is built: serveStatic's onFound runs too late to add headers.
+  app.use('*', async (c, next) => {
+    await next();
+    if (!c.res.ok) return;
+    c.res.headers.set(
+      'Cache-Control',
+      c.req.path.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : 'no-cache',
+    );
+  });
   if (existsSync(root)) app.use('*', serveStatic({ root }));
 
   // 3. SPA fallback: client-side routes get index.html.
