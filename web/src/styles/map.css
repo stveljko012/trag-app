@@ -189,3 +189,8 @@
 .leaflet-tile-pane {
   filter: brightness(0.64) saturate(0.6);
 }
+
+/* The map takes focus on click; show the ring only when it was reached with the keyboard. */
+.leaflet-container:focus:not(:focus-visible) {
+  outline: none;
+}

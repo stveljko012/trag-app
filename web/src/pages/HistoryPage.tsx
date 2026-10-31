@@ -107,10 +107,12 @@ export function HistoryPage() {
   }
 
   return (
-    <div className="grid h-[calc(100dvh-var(--footer-height))] min-h-[520px] grid-cols-[minmax(0,1fr)_380px] grid-rows-[auto_minmax(0,1fr)] max-md:flex max-md:h-auto max-md:min-h-0 max-md:flex-col">
-      <div className="col-span-full flex flex-wrap items-center gap-2 border-b border-border bg-surface px-4 py-3">
-        <h1 className="mr-auto text-xl font-bold max-md:w-full">Istorija</h1>
+    <div className="grid h-[calc(100dvh-var(--footer-height))] min-h-[520px] grid-cols-[minmax(0,1fr)_380px] grid-rows-[auto_minmax(0,1fr)] max-md:flex max-md:h-[calc(100dvh-var(--topbar-height))] max-md:min-h-[480px] max-md:flex-col">
+      {/* Phones: one row of controls, no title and no "Danas" (the date picker covers it). */}
+      <div className="col-span-full flex flex-wrap items-center gap-2 border-b border-border bg-surface px-4 py-3 max-md:flex-nowrap max-md:py-2.5">
+        <h1 className="mr-auto text-xl font-bold max-md:hidden">Istorija</h1>
         <Select
+          className="max-md:min-w-0 max-md:flex-1"
           ariaLabel="Vozilo"
           placeholder="Vozilo"
           mono
@@ -119,7 +121,7 @@ export function HistoryPage() {
           options={(vehicles.data ?? []).map((v) => ({ value: String(v.id), label: v.name }))}
           disabled={!vehicles.data?.length}
         />
-        <div className="flex gap-1">
+        <div className="flex shrink-0 gap-1">
           <button
             type="button"
             className={buttonClass({ icon: true })}
@@ -129,7 +131,7 @@ export function HistoryPage() {
             <ChevronLeft size={18} />
           </button>
           <input
-            className={inputClass}
+            className={cn(inputClass, 'max-md:w-[132px]')}
             type="date"
             aria-label="Dan"
             value={day}
@@ -147,7 +149,7 @@ export function HistoryPage() {
           </button>
           <button
             type="button"
-            className={buttonClass()}
+            className={cn(buttonClass(), 'max-md:hidden')}
             disabled={day === today}
             onClick={() => update({ day: today })}
           >
@@ -156,7 +158,7 @@ export function HistoryPage() {
         </div>
       </div>
 
-      <div className="relative min-h-0 max-md:h-[50dvh] max-md:shrink-0">
+      <div className="relative min-h-0 max-md:h-[42dvh] max-md:shrink-0">
         <BaseMap className="absolute inset-0">
           <FitBounds
             bounds={line.length ? line : null}
@@ -221,7 +223,8 @@ export function HistoryPage() {
         )}
       </div>
 
-      <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto border-l border-border bg-surface p-4 max-md:overflow-visible max-md:border-l-0">
+      {/* Phones: the page fills the screen, the map stays in view and only this panel scrolls. */}
+      <aside className="flex min-h-0 flex-col gap-4 overflow-y-auto overscroll-contain border-l border-border bg-surface p-4 max-md:flex-1 max-md:border-l-0 max-md:border-t">
         <div className="font-semibold">{formatLongDay(day)}</div>
         {error && (
           <ErrorMessage className="flex items-center justify-between gap-3">
@@ -233,7 +236,8 @@ export function HistoryPage() {
         )}
         {noVehicles && <EmptyState>Nema vozila.</EmptyState>}
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(110px,1fr))] gap-2">
+        {/* All four in one row, with smaller type than other stats so they fit. */}
+        <div className="grid grid-cols-4 gap-1.5">
           {(
             [
               ['Pređeno', formatKm(totals.km)],
@@ -244,6 +248,7 @@ export function HistoryPage() {
           ).map(([label, value]) => (
             <Stat
               key={label}
+              className="px-2 py-2 [&>div:first-child]:text-[0.72rem] [&>div:last-child]:text-[0.95rem]"
               label={label}
               value={panelLoading ? <Skeleton className="mt-1 mb-0.5 h-5 w-16" /> : value}
             />

@@ -148,11 +148,10 @@ export function MapPage() {
 
   return (
     <div className="grid h-[calc(100dvh-var(--footer-height))] min-h-[560px] grid-cols-[340px_minmax(0,1fr)] grid-rows-[auto_minmax(0,1fr)] max-md:flex max-md:h-auto max-md:min-h-0 max-md:flex-col">
-      <header className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border bg-surface px-5 py-3.5 max-md:px-4 max-md:py-3">
-        <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em] max-md:text-[1.2rem]">
-          Mapa uživo
-        </h1>
-        <div className="ml-auto flex flex-wrap items-center gap-2.5 max-md:gap-2">
+      {/* Phones: hidden, the map needs the height more than the title. */}
+      <header className="col-span-full flex flex-wrap items-center gap-x-4 gap-y-3 border-b border-border bg-surface px-5 py-3.5 max-md:hidden">
+        <h1 className="text-[1.4rem] font-extrabold tracking-[-0.01em]">Mapa uživo</h1>
+        <div className="ml-auto flex flex-wrap items-center gap-2.5">
           {me?.role === 'owner' && (
             <Link
               className={buttonClass()}
@@ -163,7 +162,7 @@ export function MapPage() {
               }
             >
               <ScanSearch size={16} />
-              <span className="max-md:hidden">Nova lokacija</span>
+              Nova lokacija
             </Link>
           )}
         </div>
